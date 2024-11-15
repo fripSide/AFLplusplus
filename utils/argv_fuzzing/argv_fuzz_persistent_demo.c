@@ -7,6 +7,21 @@ using persistent mode.
 #include <string.h>
 #include "argv-fuzz-inl.h"
 
+/* this lets the source compile without afl-clang-fast/lto */
+#ifndef __AFL_FUZZ_TESTCASE_LEN
+
+  ssize_t       fuzz_len;
+  unsigned char fuzz_buf[1024000];
+
+  #define __AFL_FUZZ_TESTCASE_LEN fuzz_len
+  #define __AFL_FUZZ_TESTCASE_BUF fuzz_buf
+  #define __AFL_FUZZ_INIT() void sync(void);
+  #define __AFL_LOOP(x) \
+    ((fuzz_len = read(0, fuzz_buf, sizeof(fuzz_buf))) > 0 ? 1 : 0)
+  #define __AFL_INIT() sync()
+
+#endif
+
 __AFL_FUZZ_INIT();
 
 /* The main function is an entry point for a program.
